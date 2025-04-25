@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Dodge Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+     
+    }
+
+    canvas {
+      background-color: #eee;
+      border: 2px solid #333;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="500" height="600"></canvas>
+  <div id="gameOver" style="display: none;">Game Over</div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 60,
+      width: 50,
+      height: 50,
+      speed: 5,
+      dx: 0,
+    };
+
+    const obstacles = [];
+    const obstacleWidth = 50;
+    const obstacleHeight = 50;
+    let gameInterval;
+    let gameOver = false;
+
+    function drawPlayer() {
+      ctx.fillStyle = "#0095DD";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function createObstacle() {
+      const x = Math.random() * (canvas.width - obstacleWidth);
+      obstacles.push({ x, y: -obstacleHeight });
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "red";
+      obstacles.forEach((obstacle, index) => {
+        ctx.fillRect(obstacle.x, obstacle.y, obstacleWidth, obstacleHeight);
+        obstacle.y += 3;
+
+        if (
+          obstacle.y + obstacleHeight > player.y &&
+          obstacle.x < player.x + player.width &&
+          obstacle.x + obstacleWidth > player.x
+        ) {
+          endGame();
+        }
+
+        if (obstacle.y > canvas.height) {
+          obstacles.splice(index, 1);
+        }
+      });
+    }
+
+    function movePlayer() {
+      if (player.x + player.dx >= 0 && player.x + player.dx <= canvas.width - player.width) {
+        player.x += player.dx;
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+      drawObstacles();
+      movePlayer();
+
+      if (Math.random() < 0.01) {
+        createObstacle();
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function keyDownHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") {
+        player.dx = player.speed;
+      } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        player.dx = -player.speed;
+      }
+    }
+
+    function keyUpHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight" || e.key === "Left" || e.key === "ArrowLeft") {
+        player.dx = 0;
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      document.getElementById("gameOver").style.display = "block";
+      cancelAnimationFrame(gameInterval);
+    }
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function startGame() {
+      gameOver = false;
+      obstacles.length = 0;
+      document.getElementById("gameOver").style.display = "none";
+      gameInterval = requestAnimationFrame(update);
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
